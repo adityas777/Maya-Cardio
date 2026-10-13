@@ -254,3 +254,131 @@ class TestHeartRate:
         for w in range(4):
             result = compute_window("s", w, "offline", store, pd, 0)
             assert result["heart_rate"] is None, f"w={w} should be null"
+
+
+# ---------------------------------------------------------------------------
+# 7. Regression: boundary peak at last sample of window (peak_boundary_fix)
+# ---------------------------------------------------------------------------
+
+class TestPeakBoundaryFix:
+    """
+    Regression test for peak_boundary_fix.patch.
+
+    Signal: sensor-1 ch2 = 100 everywhere, except:
+      - sample 1000: ch2 = 1000  (peak in window 2, last sample = 1199... wait,
+        window 2 = samples 800-1199. sample 1000 is index 1000, inside window 2.
+        But to hit the boundary we place peaks at 1000 and 1999.)
+      - sample 1999: ch2 = 1000  (last sample of window 4 = samples 1600-1999)
+
+    With the fix, the peak at 1999 is confirmed when w_end+1 = 2000 is fed.
+    HR window 4 looks back over samples 0-1999 (windows 0-4).
+    Peaks at 1000 and 1999 → gap = 999 → HR = 24000/999 ≈ 24.0.
+    """
+
+    def _make_store(self) -> MemoryStore:
+        store = MemoryStore()
+        total = 6 * SAMPLES_PER_WINDOW  # windows 0-5
+        for idx in range(total):
+            # sensor 1: ch2 is the ECG channel
+            ch2 = 1000 if idx in (1000, 1999) else 100
+            store.add("fix", 1, idx, [50, ch2, 150])
+            # sensor 2: minimal valid data
+            store.add("fix", 2, idx, [1, 1])
+        return store
+
+    def test_window4_heart_rate_24(self):
+        store = self._make_store()
+        pd = PeakDetector()
+        result = None
+        for w in range(5):
+            result = compute_window("fix", w, "offline", store, pd, 0)
+        # window 4: peaks at 1000 and 1999, gap = 999
+        # HR = round1(24000 / 999) = round1(24.024...) = 24.0
+        assert result["heart_rate"] == 24.0, (
+            f"Expected 24.0, got {result['heart_rate']}"
+        )
+
+    def test_no_duplicate_peaks(self):
+        store = self._make_store()
+        pd = PeakDetector()
+        for w in range(5):
+            compute_window("fix", w, "offline", store, pd, 0)
+        # Each boundary index must appear at most once in the confirmed peaks
+        peaks = pd._peaks
+        assert len(peaks) == len(set(peaks)), f"Duplicate peaks: {peaks}"
+
+    def test_peak_buffer_size_bounded(self):
+        """Buffer must never exceed 1200 entries during a long run."""
+        store = MemoryStore()
+        total = 13 * SAMPLES_PER_WINDOW
+        for idx in range(total):
+            store.add("buf", 1, idx, [50, 100, 150])
+            store.add("buf", 2, idx, [1, 1])
+        pd = PeakDetector()
+        for w in range(13):
+            compute_window("buf", w, "offline", store, pd, 0)
+            assert len(pd._buf) <= 1200, (
+                f"Buffer size {len(pd._buf)} > 1200 after window {w}"
+            )
+
+
+# ---------------------------------------------------------------------------
+# 8. Regression: steady 75 bpm signal gives correct HR for windows 10-12
+# ---------------------------------------------------------------------------
+
+class TestSteady75Bpm:
+    """
+    75 bpm → samples_per_beat = 400*60/75 = 320 samples.
+    Peaks every 320 samples starting at index 800:
+      800, 1120, 1440, 1760, 2080, ...
+
+    We need 60 seconds = 24000 samples (windows 0-59).
+    HR is first computed at window 4 (samples 0-1999).
+    We assert HR == 75.0 for windows 10 through 12.
+    """
+
+    PEAK_START = 800
+    PEAK_INTERVAL = 320  # samples per beat at 75 bpm
+    TOTAL_WINDOWS = 13
+    BASELINE = 100
+    PEAK_VAL = 9000
+
+    def _make_store(self) -> MemoryStore:
+        store = MemoryStore()
+        total = self.TOTAL_WINDOWS * SAMPLES_PER_WINDOW
+        peak_set = set(
+            range(self.PEAK_START, total, self.PEAK_INTERVAL)
+        )
+        for idx in range(total):
+            ch2 = self.PEAK_VAL if idx in peak_set else self.BASELINE
+            store.add("bpm75", 1, idx, [50, ch2, 150])
+            store.add("bpm75", 2, idx, [1, 1])
+        return store
+
+    def test_heart_rate_75_for_windows_10_to_12(self):
+        store = self._make_store()
+        pd = PeakDetector()
+        results = {}
+        for w in range(self.TOTAL_WINDOWS):
+            results[w] = compute_window("bpm75", w, "offline", store, pd, 0)
+        for w in range(10, 13):
+            hr = results[w]["heart_rate"]
+            assert hr == 75.0, f"window {w}: expected 75.0, got {hr}"
+
+    def test_no_duplicate_peaks_75bpm(self):
+        store = self._make_store()
+        pd = PeakDetector()
+        for w in range(self.TOTAL_WINDOWS):
+            compute_window("bpm75", w, "offline", store, pd, 0)
+        peaks = pd._peaks
+        assert len(peaks) == len(set(peaks)), f"Duplicate peaks: {peaks}"
+
+    def test_peak_buffer_at_most_1200_75bpm(self):
+        store = self._make_store()
+        pd = PeakDetector()
+        for w in range(self.TOTAL_WINDOWS):
+            compute_window("bpm75", w, "offline", store, pd, 0)
+            assert len(pd._buf) <= 1200, (
+                f"Buffer {len(pd._buf)} > 1200 after window {w}"
+            )
+

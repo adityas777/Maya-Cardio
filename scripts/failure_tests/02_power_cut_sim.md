@@ -4,7 +4,7 @@
 # interactive VM console access.
 
 cat << 'EOF'
-# Power Cut Simulation (Test 05)
+# Power Cut Simulation (Test 02)
 
 ## Setup (VM-based, if no physical Pi)
 

@@ -84,12 +84,18 @@ class PeakDetector:
         self._prev_peak: Optional[int] = None
         # confirmed peaks: sorted list of indexes
         self._peaks: list[int] = []
+        # set of candidate indexes already checked, to avoid re-checking
+        self._checked: set[int] = set()
 
     def feed(self, index: int, value: int) -> None:
         """Feed one new available sample. Call in ascending index order."""
         self._buf[index] = value
         # Try to confirm the candidate at index-1 now that index (i+1) is known
         self._try_confirm(index - 1)
+        # Prune buffer: keep only the most recent 1200 samples
+        if len(self._buf) > 1200:
+            oldest = min(self._buf)
+            del self._buf[oldest]
 
     def feed_unavailable(self, index: int) -> None:
         """Signal that this index is lost/missing (so it cannot be a peak)."""
@@ -98,6 +104,9 @@ class PeakDetector:
 
     def _try_confirm(self, i: int) -> None:
         """Check whether index i satisfies all peak rules."""
+        if i in self._checked:
+            return  # already evaluated; do not re-check
+        self._checked.add(i)
         if i not in self._buf:
             return
 
@@ -195,10 +204,16 @@ def compute_window(
     missing_2 = SAMPLES_PER_WINDOW - len(s2_avail)
 
     # ── Feed peak detector (sensor 1, ch2 = value[1]) ─────────────────────
-    # Feed every index in window in order, marking unavailable ones
-    for idx in range(w_start, w_end + 1):
+    # Feed every index in window in order, marking unavailable ones.
+    # Also feed w_end+1 so a peak exactly on w_end is confirmed inside
+    # this window (peak confirmation requires the next sample to be known).
+    s1_next_row = store.get_samples(session_id, 1, w_end + 1, w_end + 1)
+    s1_next = {idx: vals for idx, vals in s1_next_row}
+    for idx in range(w_start, w_end + 2):
         if idx in s1_avail:
             peak_detector.feed(idx, s1_avail[idx][1])
+        elif idx == w_end + 1 and idx in s1_next:
+            peak_detector.feed(idx, s1_next[idx][1])
         else:
             peak_detector.feed_unavailable(idx)
 

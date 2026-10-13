@@ -7,9 +7,12 @@ data/
 *.db-wal
 *.db-shm
 config/pipeline.toml
+# Evidence files: excluded from normal commits because they are large/generated.
+# They ARE included in the submission zip — force-add with: git add -f <file>
 evidence/*.csv
 evidence/*.jsonl
 evidence/*.txt
+# Video recordings likewise excluded from git but included in submission zip
 *.mp4
 demo.mp4
 submission.zip
