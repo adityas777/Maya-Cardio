@@ -1,0 +1,23 @@
+[Unit]
+Description=MayaCardio Biosignal Pipeline
+After=network.target biosignal-mock.service
+Wants=biosignal-mock.service
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/pipeline
+Environment="PIPELINE_CLOUD_TOKEN=REPLACE_WITH_TOKEN"
+ExecStart=/opt/pipeline/.venv/bin/pipeline run --config /opt/pipeline/config/pipeline.toml
+Restart=always
+RestartSec=5
+# Resource limits matching Pi 4 constraints
+MemoryMax=1800M
+CPUQuota=380%
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pipeline
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,18 @@
+[Unit]
+Description=MayaCardio Biosignal Mock (test double)
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/pipeline
+ExecStart=/opt/pipeline/.venv/bin/python -m tests.fake_mock \
+    --mode signal --seed 7 --duration 3600 --port 7100
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=biosignal-mock
+
+[Install]
+WantedBy=multi-user.target

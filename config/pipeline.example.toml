@@ -1,0 +1,30 @@
+# Pipeline – Example Configuration
+# Copy to config/pipeline.toml and fill in secrets (never commit that file).
+
+[mock]
+host = "127.0.0.1"
+port = 7100
+read_timeout_s = 2.0
+reconnect_backoff_max_s = 30.0
+reconnect_initial_s = 1.0
+
+[store]
+db_path = "data/pipeline.db"
+commit_interval_samples = 400      # 1 second of data per sensor
+disk_free_warn_mb = 50
+
+[cloud]
+base_url = "https://REPLACE_ME.example.com"
+bearer_token_env = "PIPELINE_CLOUD_TOKEN"  # env var name; never hardcode
+upload_batch_samples = 400         # per sensor per POST (1 s of data)
+catchup_batch_samples = 24000      # per POST during catch-up (60 s of data)
+catchup_parallelism = 2
+health_timeout_s = 1.0
+
+[mode]
+probe_interval_s = 2.0
+offline_after_failures = 2         # consecutive health failures → offline
+online_after_successes = 2         # consecutive health successes → try online
+
+[processing]
+grace_period_s = 3.0               # max wait for missing data before emitting window
