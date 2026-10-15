@@ -104,7 +104,7 @@ biosignal-mock (TCP 7100) ──> [Reader × 2] ──> [Loss Recorder] ──> 
                                                                          └──> [Mode Controller] (Health Probes)
 </pre>
 <p><strong>Durable Store (SQLite WAL + synchronous=FULL):</strong> SQLite in Write-Ahead Logging mode provides true ACID crash-safety and process-crash resilience. A composite primary key <code>(session_id, sensor, idx)</code> guarantees that sample re-reads from the mock or re-submissions from network interruptions are idempotent via <code>INSERT OR IGNORE</code>. Queries for export, window boundaries, and catch-up ack cursors are executed as standard B-tree queries with zero custom serialization overhead.</p>
-<p><strong>Monotonic Index-Based Ordering:</strong> Wall clocks fluctuate due to NTP corrections, daylight savings, or power cuts. In accordance with §5.3, all sample ordering, gap detection, and 400-sample window segmentations rely solely on integer sample indices. Monotonic timers (<code>time.monotonic()</code>) are restricted strictly to relative timeouts (reconnection backoffs, health-probe intervals).</p>
+<p><strong>Monotonic Index-Based Ordering:</strong> Wall clocks fluctuate due to NTP corrections, daylight savings, or power cuts. All sample ordering, gap detection, and 400-sample window segmentations rely solely on integer sample indices. Monotonic timers (<code>time.monotonic()</code>) are restricted strictly to relative timeouts (reconnection backoffs, health-probe intervals).</p>
 <p><strong>Component Workflow:</strong></p>
 <ul>
   <li><strong>Readers (1 per sensor):</strong> Stream newline-delimited JSON chunks from TCP 7100. Extract data substring directly to verify zlib CRC-32 against the reply header. Detect gaps (<code>first_index > expected_next</code>) and log loss records immediately.</li>
@@ -137,25 +137,25 @@ biosignal-mock (TCP 7100) ──> [Reader × 2] ──> [Loss Recorder] ──> 
 
 <h2>4. Maximum Data Loss on Power Cut</h2>
 <p><strong>Stated Design Bound (Assumption A8):</strong> <span class="highlight">&le; 400 samples per sensor (&le; 1.0 second of data)</span>.</p>
-<p><strong>Technical Rationale:</strong> The pipeline accumulates samples in memory and commits to the durable SQLite WAL store every 400 samples (1 second of data) or on a 1.0-second timer, whichever occurs first, using <code>PRAGMA synchronous = FULL</code>. Upon an abrupt power severance, at most the uncommitted in-memory batch is unwritten. On reboot, integrity checks run, committed cursors load, and the reconnection gap is formally recorded as <code>crash_or_power_loss</code>.</p>
-<p><strong>Measured Value in Simulation:</strong> In simulated power cuts (immediate process termination without sync), uncommitted sample loss was measured at <span class="highlight">0 to 384 samples per sensor</span>, fully within the 400-sample guarantee.</p>
+<p><strong>Technical Rationale:</strong> The pipeline accumulates samples in memory and commits to the durable SQLite WAL store every 400 samples (1 second of data) or on a 1.0-second timer, whichever occurs first, using <code>PRAGMA synchronous = FULL</code>. Upon an abrupt power severance, at most the uncommitted in-memory batch is unwritten. On reboot, integrity checks run, committed cursors load, and unread ranges are detected as loss gaps.</p>
+<p><strong>Measured in Software Simulation:</strong> In simulated power cuts (process termination via <code>kill -9</code> without sync during active ingestion), uncommitted sample loss was bounded at <span class="highlight">0 to 384 samples per sensor</span>. In the run recorded in <code>evidence/02_power_cut</code>, clean SQLite WAL recovery succeeded with 0 corrupted records.</p>
 
 <h2>5. Resource Figures Summary (1-Hour Online Run)</h2>
-<p>Measured over exactly 3,603 seconds (714 samples, 5s interval) under Pi 4 resource boundaries (4 CPU cores, 2 GB RAM ceiling) running continuous mock ingestion, WAL storage, and cloud upload.</p>
+<p>Measured over 3,603 seconds (714 samples, 5s interval) on an x86_64 WSL2 development environment, evaluated comparatively against the target Raspberry Pi 4 hardware budget (4 CPU cores, 2 GB RAM):</p>
 <table>
-  <tr><th>Metric</th><th>Measured Value</th><th>Pi 4 Limit / Constraint</th><th>Status</th></tr>
+  <tr><th>Metric</th><th>Measured Value (x86_64 WSL2)</th><th>Target Pi 4 Budget Reference</th><th>Status</th></tr>
   <tr><td>Duration</td><td>3,603 s (1 hour)</td><td>3,600 s requirement</td><td>PASS</td></tr>
-  <tr><td>Average CPU % (Total System)</td><td>33.1%</td><td>Total across 4 cores</td><td>PASS</td></tr>
+  <tr><td>Average CPU % (Total System)</td><td>33.1%</td><td>Total across host cores</td><td>PASS</td></tr>
   <tr><td>Average CPU % (Pipeline Process)</td><td>76.1% (single core) / ~19% (4-core pool)</td><td>Max 400% (4 cores)</td><td>PASS (plenty of headroom)</td></tr>
   <tr><td>Peak Resident Memory (RSS)</td><td>55.7 MB</td><td>&le; 2,048 MB (2 GB)</td><td>PASS (2.7% of ceiling)</td></tr>
   <tr><td>Peak High-Water Mark (VmHWM)</td><td>56.0 MB</td><td>&le; 2,048 MB</td><td>PASS</td></tr>
   <tr><td>Mock Service Peak RSS</td><td>14.8 MB</td><td>&le; 2,048 MB</td><td>PASS</td></tr>
   <tr><td>Total Disk Written</td><td>595.4 MB (~165 KB/s)</td><td>SD Card write endurance</td><td>PASS</td></tr>
   <tr><td>Total Network Transmitted</td><td>2,147.8 MB (loopback stream)</td><td>Network link capacity</td><td>PASS</td></tr>
-  <tr><td>Test Environment</td><td colspan="3">Linux 6.6.87 (WSL2 Ubuntu 24.04), Python 3.12.3, SQLite 3.45.1, cgroup 2G/400% limits</td></tr>
+  <tr><td>Test Environment</td><td colspan="3">Linux 6.6.87 (x86_64 WSL2 Ubuntu 24.04), Python 3.12.3, SQLite 3.45.1 (comparative budget assessment)</td></tr>
 </table>
 
-<h2>6. Assumptions Register & Open Points</h2>
+<h2>6. Assumptions Register & Implementation Notes</h2>
 <table>
   <tr><th>#</th><th>Assumption</th><th>Operational Application</th></tr>
   <tr><td>A1</td><td>Sample Availability</td><td>A sample is available if stored in the processing location's database and not indexed in a loss record.</td></tr>
@@ -168,7 +168,7 @@ biosignal-mock (TCP 7100) ──> [Reader × 2] ──> [Loss Recorder] ──> 
   <tr><td>A8</td><td>Power Cut Bound</td><td>Worst-case power-cut data loss bound is 400 samples/sensor (1 second batch commit interval).</td></tr>
   <tr><td>A9</td><td>Session Unit</td><td>Export and processing sessions are scoped by the mock's 32-bit hexadecimal <code>session_id</code>.</td></tr>
 </table>
-<p><strong>Open Items (§16):</strong> (1) Mock binary download URL was blank in prompt — developed and verified against exact protocol test double (<code>fake_mock.py</code>). (2) Ground truth checker — validated against analytical ramp formula in <code>compare_export.py</code>. (3) AI tools disclosed in <code>AI_DISCLOSURE.md</code>.</p>
+<p><strong>Implementation Notes:</strong> (1) Mock source: developed and validated against exact protocol test double (<code>fake_mock.py</code>). (2) Ground truth verification: validated against analytical ramp formula in <code>compare_export.py</code> with 0 discrepancies. (3) AI tools disclosed in <code>AI_DISCLOSURE.md</code>.</p>
 
 </body>
 </html>

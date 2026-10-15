@@ -121,18 +121,18 @@ To reproduce the exact demonstration shown in the video:
 
 ---
 
-## 2. 1-Hour Pi 4 Resource Benchmark (Measured Results)
+## 2. 1-Hour Resource Benchmark (x86_64 WSL2 Benchmark)
 
-Continuously benchmarked for **3,603 seconds (714 samples, 5s interval)** under enforced Raspberry Pi 4 bounds (`CPUQuota=400%`, `MemoryMax=2G`).
+Continuously benchmarked for **3,603 seconds (714 samples, 5s interval)** on an x86_64 WSL2 development environment, evaluated comparatively against the target Raspberry Pi 4 hardware budget (4 CPU cores, 2 GB RAM):
 
-| Metric | Measured Value | Pi 4 Limit / Bound | Status | Assessment Verdict |
+| Metric | Measured Value (x86_64 WSL2) | Target Pi 4 Budget Reference | Status | Assessment Verdict |
 |---|---|---|---|---|
-| **Test Duration** | **3,603 s** (1 hour) | &ge; 3,600 s | Complete | **PASS** (714 samples logged) |
-| **Peak RAM (RSS)** | **55.7 MB** | 2,048 MB (2 GB) | **Pass** | **Only 2.7% of Pi 4 limit** (zero leak) |
-| **Peak VmHWM** | **56.0 MB** | 2,048 MB (2 GB) | **Pass** | Rock-solid memory stability |
-| **Pipeline Process CPU** | **76.1%** (single core) | 400% (4 cores) | **Pass** | **19.0% of total Pi 4 capacity** |
-| **Total System CPU** | **33.1%** | 400% (4 cores) | **Pass** | Leaves &gt;80% CPU headroom for OS |
-| **Total Disk Written** | **595.4 MB** | Wear-leveling safe | **Pass** | ~165 KB/s continuous WAL commits |
+| **Test Duration** | **3,603 s** (1 hour) | 3,600 s requirement | Complete | **PASS** (714 samples logged) |
+| **Peak RAM (RSS)** | **55.7 MB** | 2,048 MB (2 GB) | **Pass** | **Only 2.7% of Pi 4 budget** (zero leak) |
+| **Peak VmHWM** | **56.0 MB** | 2,048 MB (2 GB) | **Pass** | Memory footprint strictly bounded |
+| **Pipeline Process CPU** | **76.1%** (single core) | 400% (4 cores) | **Pass** | Analytical fit within 4-core budget |
+| **Total System CPU** | **33.1%** | 400% (4 cores) | **Pass** | Includes host background tasks |
+| **Total Disk Written** | **595.4 MB** | Flash SD write endurance | **Pass** | ~165 KB/s continuous WAL commits |
 | **Total Network TX** | **2,147.8 MB** | Local / Cloud link | **Pass** | Continuous 400-sample JSON streaming |
 
 *Full raw time-series metrics CSV: [`evidence/resources_1h.csv`](evidence/resources_1h.csv).*
@@ -141,15 +141,15 @@ Continuously benchmarked for **3,603 seconds (714 samples, 5s interval)** under 
 
 ## 3. Failure Mode Verification (All 8 Tests Passed)
 
-All 8 automated failure scenarios required by §11 were simulated, executed, and verified:
+All 8 automated failure scenarios were simulated, executed, and verified:
 
 | # | Test Scenario | Automated Script | Injected Failure Condition | Verified Pass Criteria | Evidence |
 |---|---|---|---|---|---|
 | **01** | Process Kill | `scripts/run_test_01.sh` | `kill -9` pipeline under load | Zero duplicates on restart (`INSERT OR IGNORE`), cursor preserved | [`evidence/01_process_kill`](evidence/01_process_kill/) |
-| **02** | Power Cut | `scripts/run_test_02.sh` | Simulated ungraceful power loss | Loss bounded &le; 400 samples/sensor (1s sync), DB passes integrity check | [`evidence/02_power_cut`](evidence/02_power_cut/) |
+| **02** | Power Cut (Sim) | `scripts/run_test_02.sh` | Software simulation: ungraceful `kill -9` without sync | Loss bounded &le; 400 samples/sensor (1s sync), DB passes integrity check | [`evidence/02_power_cut`](evidence/02_power_cut/) |
 | **03** | Network Outage | `scripts/run_test_03.sh` | Cloud API killed for 30s | Switches to offline in &le;10s; catches up in &le;40s upon return; device & cloud export identical | [`evidence/03_network_cut`](evidence/03_network_cut/) |
 | **04** | Mock Restart | `scripts/run_test_04.sh` | Mock killed and restarted (new session) | Detects session change, rotates DB session cleanly, starts new ingest from index 0 | [`evidence/04_mock_restart`](evidence/04_mock_restart/) |
-| **05** | Disk Full | `scripts/run_test_05.sh` | Read-only partition / disk full | Safely transitions to degraded mode; records disk loss; self-heals when space freed | [`evidence/05_disk_full`](evidence/05_disk_full/) |
+| **05** | Disk Full | `scripts/run_test_05.sh` | Simulated storage write error (full disk / read-only) | Caught SQLite disk full exceptions, prevented fatal crash, process survived | [`evidence/05_disk_full`](evidence/05_disk_full/) |
 | **06** | Clock Jump | `scripts/run_test_06.sh` | System clock jumped &plusmn;1 hour (NTP) | Zero corrupted windows (pipeline strictly relies on sample index, monotonic timers) | [`evidence/06_clock_change`](evidence/06_clock_change/) |
 | **07** | Corrupt & Dups | `scripts/run_test_07.sh` | Bitflips, CRC corruption, duplicate TCP chunks | CRC failures retried and recorded as loss; duplicates discarded via composite PK | [`evidence/07_corrupt_and_duplicate`](evidence/07_corrupt_and_duplicate/) |
 | **08** | Silent Sensor | `scripts/run_test_08.sh` | Sensor 2 halted; Sensor 1 active | Heart rate continues computing on Sensor 1; Sensor 2 marked `magnitude: null` | [`evidence/08_sensor_silent`](evidence/08_sensor_silent/) |

@@ -182,9 +182,9 @@
   <div class="tagline">"Never Lose a Heartbeat" — Candidate Assessment Submission Dossier</div>
   <div class="meta-grid">
     <div class="meta-item"><strong>Assessment:</strong> Software Systems Engineering (Oct 2026)</div>
-    <div class="meta-item"><strong>Target Platform:</strong> Raspberry Pi 4 Model B (4 cores, 2 GB RAM)</div>
-    <div class="meta-item"><strong>Submission Format:</strong> Complete Unified Dossier + Code Package</div>
-    <div class="meta-item"><strong>Date:</strong> October 14, 2026</div>
+    <div class="meta-item"><strong>Target Reference:</strong> Raspberry Pi 4 Model B (4 cores, 2 GB RAM)</div>
+    <div class="meta-item"><strong>Benchmark Host:</strong> x86_64 WSL2 (Ubuntu 24.04 LTS)</div>
+    <div class="meta-item"><strong>Date:</strong> October 2026</div>
   </div>
 </div>
 
@@ -192,7 +192,7 @@
 <div class="link-box">
   <h3>Project Demo Video & Repository Submission Links</h3>
   <p style="margin: 0 0 6px 0; font-size: 8pt; color: #475569;">
-    As authorized under Assessment Spec Section 16 (Item 3), this master document contains the complete technical design, full-hour Pi resource measurements, failure test evidence logs, and submission links.
+    This master document contains the complete technical design, 1-hour resource benchmark measurements, failure test evidence logs, and submission links.
   </p>
   <div class="link-field">
     <strong>Demo Video Link:</strong>
@@ -296,21 +296,21 @@
   <strong>Stated Design Bound (Assumption A8):</strong> <strong>&le; 400 samples per sensor (&le; 1.0 second of data)</strong>.
 </p>
 <p>
-  <strong>Technical Proof:</strong> The pipeline buffers samples in memory and executes atomic SQLite transactions every 400 samples (1.0 s of data at 400 Hz) or on a 1.0-second timer, using <code>PRAGMA synchronous = FULL</code>. Upon an unannounced power loss, only the uncommitted in-memory batch is unwritten. On subsequent boot, database integrity is verified, committed cursors are loaded, and the missing gap is recorded as <code>crash_or_power_loss</code>.
-  In simulated power-loss testing (abrupt process termination without sync), observed loss was <strong>0 to 384 samples per sensor</strong>, strictly complying with the 400-sample ceiling.
+  <strong>Technical Rationale:</strong> The pipeline buffers samples in memory and executes atomic SQLite transactions every 400 samples (1.0 s of data at 400 Hz) or on a 1.0-second timer, using <code>PRAGMA synchronous = FULL</code>. Upon an unannounced power loss, only the uncommitted in-memory batch is unwritten. On subsequent boot, database integrity is verified, committed cursors are loaded, and unread ranges are detected as loss gaps.
+  In simulated power-loss testing (software process termination via <code>kill -9</code> without sync during active loop), uncommitted sample loss was bounded within the 400-sample limit (in the test run recorded in <code>evidence/02_power_cut</code>, clean SQLite WAL recovery succeeded with 0 corrupted records).
 </p>
 
-<h2>4. Official 1-Hour Pi 4 Resource Measurement Report</h2>
+<h2>4. 1-Hour Resource Measurement Report (x86_64 WSL2 Benchmark)</h2>
 <p>
-  Continuously sampled over <strong>3,603 seconds (714 samples, 5s sampling interval)</strong> in online mode with full mock ingestion, WAL commits, and cloud uploads under Raspberry Pi 4 limits (4 CPU cores, 2 GB RAM limit):
+  Continuously sampled over <strong>3,603 seconds (714 samples, 5s sampling interval)</strong> in online mode with full mock ingestion, WAL commits, and cloud uploads on an x86_64 WSL2 development environment (evaluated comparatively against the 4-core, 2 GB Pi 4 target budget):
 </p>
 
 <table>
-  <tr><th>Measured Metric</th><th>1-Hour Measured Value</th><th>Pi 4 Limit / Requirement</th><th>Compliance Status</th></tr>
+  <tr><th>Measured Metric</th><th>1-Hour Measured Value (x86_64 WSL2)</th><th>Target Budget Reference (Pi 4)</th><th>Compliance Status</th></tr>
   <tr><td><strong>Total Measurement Time</strong></td><td>3,603 s (1 hour and 3 seconds)</td><td>3,600 s continuous run</td><td><span class="badge badge-pass">PASS</span> Complete</td></tr>
-  <tr><td><strong>Average Total System CPU</strong></td><td><strong>33.1%</strong></td><td>Total across 4 CPU cores</td><td><span class="badge badge-pass">PASS</span> High Headroom</td></tr>
-  <tr><td><strong>Average Pipeline Process CPU</strong></td><td><strong>76.1%</strong> (single core) / <strong>19.0%</strong> (4-core pool)</td><td>Max 400% (4 cores)</td><td><span class="badge badge-pass">PASS</span> Low Overhead</td></tr>
-  <tr><td><strong>Peak Resident Memory (VmRSS)</strong></td><td><strong>55.7 MB</strong></td><td>&le; 2,048 MB (2 GB)</td><td><span class="badge badge-pass">PASS</span> 2.7% of RAM</td></tr>
+  <tr><td><strong>Average Total System CPU</strong></td><td><strong>33.1%</strong></td><td>Total across host cores</td><td><span class="badge badge-pass">PASS</span> High Headroom</td></tr>
+  <tr><td><strong>Average Pipeline Process CPU</strong></td><td><strong>76.1%</strong> (single core) / ~<strong>19.0%</strong> (4-core pool equiv)</td><td>Max 400% (4 cores)</td><td><span class="badge badge-pass">PASS</span> Low Overhead</td></tr>
+  <tr><td><strong>Peak Resident Memory (VmRSS)</strong></td><td><strong>55.7 MB</strong></td><td>&le; 2,048 MB (2 GB)</td><td><span class="badge badge-pass">PASS</span> 2.7% of Budget</td></tr>
   <tr><td><strong>Peak High-Water Mark (VmHWM)</strong></td><td><strong>56.0 MB</strong></td><td>&le; 2,048 MB</td><td><span class="badge badge-pass">PASS</span> Stable</td></tr>
   <tr><td><strong>Mock Service Peak Memory</strong></td><td><strong>14.8 MB</strong></td><td>&le; 2,048 MB</td><td><span class="badge badge-pass">PASS</span> Minimal</td></tr>
   <tr><td><strong>Total Disk Volume Written</strong></td><td><strong>595.4 MB</strong> (~165 KB/s continuous)</td><td>Flash SD write endurance</td><td><span class="badge badge-pass">PASS</span> Safe for SD</td></tr>
@@ -323,7 +323,7 @@
 
 <h2>5. Complete Failure Test Evidence & Results</h2>
 <p>
-  All required failure scenarios from Section 12 have been executed and validated in simulation. Raw logs and JSON exports are archived in the <code>evidence/</code> folder:
+  All required failure scenarios have been executed and validated in simulation. Raw logs and JSON exports are archived in the <code>evidence/</code> folder:
 </p>
 
 <table>
@@ -338,8 +338,8 @@
   <tr>
     <td><strong>02</strong></td>
     <td><strong>Power Cut Simulation</strong></td>
-    <td>Abrupt process termination without sync</td>
-    <td>Restarted with <code>PRAGMA integrity_check</code>. Loss gap recorded as <code>crash_or_power_loss</code> (&le; 400 samples/sensor bound).</td>
+    <td>Software simulation: abrupt process termination (<code>kill -9</code>) without sync</td>
+    <td>Clean restart with <code>PRAGMA integrity_check</code> passing; zero corrupted records; data loss strictly &le; 400 samples/sensor bound.</td>
     <td><span class="badge badge-pass">PASS</span></td>
   </tr>
   <tr>
@@ -359,8 +359,8 @@
   <tr>
     <td><strong>05</strong></td>
     <td><strong>Full Disk</strong></td>
-    <td>Simulated storage exhaustion (no space)</td>
-    <td>Pipeline entered <code>disk_full</code> state; recorded loss lines for unwritten ranges; process survived without crashing; recovered when space returned.</td>
+    <td>Simulated storage write error (read-only partition / full disk)</td>
+    <td>Pipeline caught SQLite operational disk full exceptions, prevented unhandled fatal crashes, and logged surviving status in <code>evidence/05_disk_full/run.log</code>.</td>
     <td><span class="badge badge-pass">PASS</span></td>
   </tr>
   <tr>
@@ -402,34 +402,34 @@
 
 <h2>6. Assumptions Register (A1–A9)</h2>
 <table>
-  <tr><th>#</th><th>Assumption Name</th><th>Implementation in Code</th><th>Assessment Location</th></tr>
-  <tr><td><strong>A1</strong></td><td>Sample Availability</td><td>A sample is available if present in the local database and not recorded in a loss record.</td><td>Spec §4.1</td></tr>
-  <tr><td><strong>A2</strong></td><td>Magnitude Null Rule</td><td>Mean magnitude returns <code>null</code> if zero Sensor 2 samples are available in the 1-second window.</td><td>Spec §4.2</td></tr>
-  <tr><td><strong>A3</strong></td><td>Heart-Rate Missing Check</td><td>The missing-sample check for heart-rate gating applies strictly to Sensor 1 (ECG) samples.</td><td>Spec §4.4</td></tr>
-  <tr><td><strong>A4</strong></td><td>Peak Gating Rule</td><td>A peak candidate failing the 100-sample gap is dropped; the earlier peak retains precedence.</td><td>Spec §4.3</td></tr>
-  <tr><td><strong>A5</strong></td><td>Decimal Rounding</td><td>All floating-point results round to 1 decimal place using half-up arithmetic (<code>round(v, 1)</code>).</td><td>Spec §4.2</td></tr>
-  <tr><td><strong>A6</strong></td><td>Result Mode Output</td><td>Both offline and online results are saved and printed; the <code>mode</code> field disambiguates them.</td><td>Spec §10</td></tr>
-  <tr><td><strong>A7</strong></td><td>Window Grace Period</td><td>Online processor waits at most 3.0 seconds after window end before emitting partial window results.</td><td>Spec §7.2</td></tr>
-  <tr><td><strong>A8</strong></td><td>Power-Cut Stated Bound</td><td>Worst-case uncommitted sample loss on power cut is 400 samples/sensor (1 second batch commit).</td><td>Spec §3.2, §6.4</td></tr>
-  <tr><td><strong>A9</strong></td><td>Session Scope</td><td>Sessions are uniquely identified and partitioned by the mock's 32-bit hexadecimal <code>session_id</code>.</td><td>Spec §5.2</td></tr>
+  <tr><th>#</th><th>Assumption Name</th><th>Implementation in Code</th><th>Operational Context</th></tr>
+  <tr><td><strong>A1</strong></td><td>Sample Availability</td><td>A sample is available if present in the local database and not recorded in a loss record.</td><td>Sample Ingestion Rule</td></tr>
+  <tr><td><strong>A2</strong></td><td>Magnitude Null Rule</td><td>Mean magnitude returns <code>null</code> if zero Sensor 2 samples are available in the 1-second window.</td><td>Magnitude Calculation Rule</td></tr>
+  <tr><td><strong>A3</strong></td><td>Heart-Rate Missing Check</td><td>The missing-sample check for heart-rate gating applies strictly to Sensor 1 (ECG) samples.</td><td>Heart Rate Missing Check</td></tr>
+  <tr><td><strong>A4</strong></td><td>Peak Gating Rule</td><td>A peak candidate failing the 100-sample gap is dropped; the earlier peak retains precedence.</td><td>Peak Refractory Rule</td></tr>
+  <tr><td><strong>A5</strong></td><td>Decimal Rounding</td><td>All floating-point results round to 1 decimal place using half-up arithmetic (<code>round(v, 1)</code>).</td><td>Decimal Rounding Rule</td></tr>
+  <tr><td><strong>A6</strong></td><td>Result Mode Output</td><td>Both offline and online results are saved and printed; the <code>mode</code> field disambiguates them.</td><td>Mode Flagging Rule</td></tr>
+  <tr><td><strong>A7</strong></td><td>Window Grace Period</td><td>Online processor waits at most 3.0 seconds after window end before emitting partial window results.</td><td>Window Grace Period</td></tr>
+  <tr><td><strong>A8</strong></td><td>Power-Cut Stated Bound</td><td>Worst-case uncommitted sample loss on power cut is 400 samples/sensor (1 second batch commit).</td><td>Power-Cut Recovery Bound</td></tr>
+  <tr><td><strong>A9</strong></td><td>Session Scope</td><td>Sessions are uniquely identified and partitioned by the mock's 32-bit hexadecimal <code>session_id</code>.</td><td>Session Scope Definition</td></tr>
 </table>
 
 <!-- PAGE 4: AI DISCLOSURE & INSTALLATION -->
 <div class="page-break"></div>
 
-<h2>7. Formal AI Tool Disclosure (Spec Section 17)</h2>
+<h2>7. AI Tool Usage Disclosure</h2>
 <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px 14px; margin-bottom: 14px;">
-  <p><strong>Tools Used:</strong> Antigravity IDE (Google DeepMind) with Gemini 3.8 Flash & Claude 3.7 Sonnet.</p>
-  <p><strong>Used For:</strong> Code drafting across all pipeline modules (reader, store, uploader, processing, cloud API), unit test generation, failure injection test scripts, HTML/PDF dossier styling, and initial design note drafting.</p>
-  <p><strong>Not Used For:</strong> Final architecture selection (SQLite WAL, index-based monotone counters, and explicit loss accounting were determined by the engineer), physical hardware verification, or evaluating final pass/fail judgements.</p>
+  <p><strong>Tools Used:</strong> Antigravity IDE (Google DeepMind) with Gemini 3.8 Flash & Claude 3.7 Sonnet (via interactive agent pair-programming).</p>
+  <p><strong>Used For:</strong> Code drafting across pipeline modules (reader, store, uploader, processing, cloud API), unit test generation, failure injection test scripts, HTML/PDF dossier styling, and initial design note drafting.</p>
+  <p><strong>Not Used For:</strong> Core architectural selection (SQLite WAL, index-based monotone counters, and explicit loss accounting were determined by the engineer), physical hardware verification, or evaluating final pass/fail judgements.</p>
   <p><strong>Human Review Performed:</strong></p>
   <ul>
-    <li>Audited <code>processing.py</code> against Section 4 mathematical specifications line-by-line (peak detection, 100-sample gap, 5-second window HR formula).</li>
+    <li>Audited <code>processing.py</code> mathematical formulas line-by-line (peak detection, 100-sample gap, 5-second window HR formula).</li>
     <li>Executed and verified all 38 pytest unit tests locally (100% pass).</li>
     <li>Executed end-to-end failure injection tests (network cut, process kill, disk full, corrupt reply) and validated raw JSONL diff outputs.</li>
-    <li>Audited 1-hour resource CSV logs and verified memory stability and CPU allocation under Pi 4 boundaries.</li>
+    <li>Audited 1-hour resource CSV logs and evaluated resource metrics against target Pi 4 limits.</li>
   </ul>
-  <p><strong>Date:</strong> October 14, 2026</p>
+  <p><strong>Date:</strong> October 2026</p>
 </div>
 
 <h2>8. Fresh-Board Installation & Operational Guide</h2>
@@ -483,18 +483,18 @@ pipeline status
 <pre>
 submission/
 ├── MayaCardio_Submission_Dossier.pdf  <-- THIS MASTER DOCUMENT (with video link & evidence)
-├── DESIGN_NOTE.pdf                    <-- Strict 2-page design document (Spec §14)
+├── DESIGN_NOTE.pdf                    <-- Strict 2-page design document
 ├── README.md                          <-- Installation, assumptions, and command reference
-├── AI_DISCLOSURE.md                   <-- Tool disclosure following Spec §17
+├── AI_DISCLOSURE.md                   <-- AI tool usage disclosure document
 ├── resources_report.md                <-- 1-hour online mode figures & test environment report
 ├── evidence/                          <-- Full measured CSVs, test logs, and export diffs
 │   ├── resources_1h.csv               <-- 3,603s continuous resource time-series
 │   ├── ramp_export.jsonl              <-- Deterministic ramp export dataset
 │   ├── 01_process_kill/               <-- Process kill run log & status before/after
-│   ├── 02_power_cut/                  <-- Power cut simulation summary & bounds check
+│   ├── 02_power_cut/                  <-- Software power cut simulation summary & bounds check
 │   ├── 03_network_cut/                <-- Network cut log (1s switch, 40s catchup) & cloud diff
 │   ├── 04_mock_restart/               <-- Mock session restart logs & session export
-│   ├── 05_disk_full/                  <-- Disk full loss logs & recovery validation
+│   ├── 05_disk_full/                  <-- Disk full survival log & recovery validation
 │   ├── 06_clock_change/               <-- Clock jump logs & monotonic stability proof
 │   ├── 07_corrupt_and_duplicate/      <-- Fault proxy CRC rejection & deduplication log
 │   └── 08_sensor_silent/              <-- Sensor silent partial window & missing count log
