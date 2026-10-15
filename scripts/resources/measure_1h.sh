@@ -26,8 +26,8 @@ read_cpu_total() { awk '/^cpu /{print $2+$3+$4+$5+$6+$7+$8}' /proc/stat; }
 read_cpu_idle()  { awk '/^cpu /{print $5}' /proc/stat; }
 read_proc_stat() { awk '{print $14+$15}' /proc/"$1"/stat 2>/dev/null || echo 0; }
 read_net_tx()    { awk -v iface="$IFACE:" '$1==iface{print $10}' /proc/net/dev 2>/dev/null || echo 0; }
-read_disk_write(){ awk '/write_bytes/{print $2}' /proc/"$1"/io 2>/dev/null || echo 0; }
-read_vmhwm()     { awk '/VmHWM/{print $2}' /proc/"$1"/status 2>/dev/null || echo 0; }
+read_disk_write(){ awk '$1=="write_bytes:"{print $2}' /proc/"$1"/io 2>/dev/null || echo 0; }
+read_vmhwm()     { awk '$1=="VmHWM:"{print $2}' /proc/"$1"/status 2>/dev/null || echo 0; }
 
 PREV_CPU_TOTAL=$(read_cpu_total)
 PREV_CPU_IDLE=$(read_cpu_idle)
@@ -62,7 +62,7 @@ while [ $ELAPSED -lt $DURATION ]; do
   CPU_PIPELINE_PCT=$(echo "scale=1; 100 * $DELTA_PROC / ($INTERVAL * $HZ)" | bc)
 
   # RSS
-  RSS_KB=$(awk '/VmRSS/{print $2}' /proc/"$PIPELINE_PID"/status 2>/dev/null || echo 0)
+  RSS_KB=$(awk '$1=="VmRSS:"{print $2}' /proc/"$PIPELINE_PID"/status 2>/dev/null || echo 0)
   VMHWM_KB=$(read_vmhwm "$PIPELINE_PID")
 
   # Disk write delta

@@ -1,0 +1,9 @@
+=== Test 04: Mock Restart ===
+Tue Oct 13 21:51:01 UTC 2026
+Old session: c386bbc4
+Killing mock PID 28892
+Mock restarted with seed=99
+New session: 676b1b69
+PASS: session changed
+PASS: unread range listed with to_index:null
+=== DONE ===

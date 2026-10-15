@@ -1,0 +1,4 @@
+Sensor 2 samples stored: 240000
+Sensor 2 loss records: 0
+Incomplete windows found: 0
+PASS: sensor silence handled without crashing

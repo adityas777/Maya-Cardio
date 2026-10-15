@@ -14,13 +14,17 @@ OLD_SESSION=$(pipeline status | python3 -c "import sys,json; print(json.load(sys
 echo "Old session: $OLD_SESSION" | tee -a "$EVIDENCE_DIR/run.log"
 
 # Kill mock
-MOCK_PID=$(pgrep -f "biosignal-mock" | head -1 || true)
+MOCK_PID=$(pgrep -f "biosignal-mock|fake_mock" | head -1 || true)
 echo "Killing mock PID $MOCK_PID" | tee -a "$EVIDENCE_DIR/run.log"
 kill -9 "$MOCK_PID" || true
 sleep 2
 
 # Restart mock (new session_id will be generated)
-biosignal-mock --mode ramp --seed 99 --duration 600 --port 7100 &
+if command -v biosignal-mock >/dev/null 2>&1; then
+  biosignal-mock --mode ramp --seed 99 --duration 600 --port 7100 &
+else
+  python -m tests.fake_mock --mode ramp --seed 99 --duration 600 --port 7100 &
+fi
 echo "Mock restarted with seed=99" | tee -a "$EVIDENCE_DIR/run.log"
 sleep 5
 

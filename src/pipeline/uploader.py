@@ -64,21 +64,31 @@ class Uploader(threading.Thread):
                 self._stop_event.wait(timeout=self.poll_interval_s)
                 continue
 
-            session_id = self.store.get_open_session()
+            session_id = self.store.get_open_session() or (self.store.list_sessions() or [None])[-1]
             if not session_id:
                 self._stop_event.wait(timeout=self.poll_interval_s)
                 continue
 
+            has_more = False
             try:
-                self._upload_cycle(session_id)
+                has_more = self._upload_cycle(session_id)
             except Exception as exc:
                 logger.warning("Uploader: upload cycle error: %s", exc)
 
-            self._stop_event.wait(timeout=self.poll_interval_s)
+            if not has_more:
+                self._stop_event.wait(timeout=self.poll_interval_s)
 
     # ── Upload one cycle ──────────────────────────────────────────────────
 
-    def _upload_cycle(self, session_id: str) -> None:
+    def _upload_cycle(self, session_id: str) -> bool:
+        backlog = self.store.backlog_size(session_id)
+        if backlog > self.upload_batch_samples:
+            if not self._in_catchup:
+                self.trigger_catchup()
+        elif self._in_catchup:
+            self.finish_catchup()
+
+        any_sent = False
         for sensor in SENSORS:
             next_idx, cloud_ack = self.store.get_cursor(session_id, sensor)
             batch_size = (
@@ -107,11 +117,15 @@ class Uploader(threading.Thread):
                 new_ack = self._post_samples(payload)
                 if new_ack is not None:
                     self.store.advance_cloud_ack(session_id, sensor, new_ack)
+                    any_sent = True
                     logger.debug(
                         "Uploader s%d: cloud_ack advanced to %d", sensor, new_ack
                     )
             except Exception as exc:
                 logger.warning("Uploader s%d: POST failed: %s", sensor, exc)
+
+        # Return True if there is still backlog to upload immediately
+        return any_sent and (self.store.backlog_size(session_id) > 0)
 
     # ── HTTP helpers ─────────────────────────────────────────────────────
 

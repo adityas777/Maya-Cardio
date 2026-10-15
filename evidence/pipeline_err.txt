@@ -1,0 +1,3 @@
+usage: pipeline [-h] [--config CONFIG] [--log-level LOG_LEVEL]
+                {run,status,export,results,selftest} ...
+pipeline: error: unrecognized arguments: --config config\pipeline.example.toml --log-level WARNING

@@ -1,0 +1,1 @@
+INFO:__main__:FakeMock listening on 127.0.0.1:7100 mode=ramp seed=7 duration=60

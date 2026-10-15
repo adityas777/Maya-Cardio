@@ -170,7 +170,7 @@ def cmd_status(args, config: dict) -> None:
     health_url = f"{cloud_url.rstrip('/')}/v1/health"
     import urllib.request, urllib.error
     try:
-        with urllib.request.urlopen(health_url, timeout=1.0) as resp:
+        with urllib.request.urlopen(health_url, timeout=3.0) as resp:
             current_mode = MODE_ONLINE if resp.status == 200 else MODE_OFFLINE
     except Exception:
         current_mode = MODE_OFFLINE

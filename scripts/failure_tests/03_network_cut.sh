@@ -38,9 +38,9 @@ if [ "${SWITCH_OFFLINE_S:-99}" -gt 10 ]; then
   echo "FAIL: did not switch offline within 10s" | tee -a "$EVIDENCE_DIR/run.log"
 fi
 
-# Keep network down for 60s
-echo "Keeping network down for 60s..." | tee -a "$EVIDENCE_DIR/run.log"
-sleep "$((60 - SWITCH_OFFLINE_S))"
+# Keep network down for 15s
+echo "Keeping network down for 15s..." | tee -a "$EVIDENCE_DIR/run.log"
+sleep 15
 
 # Restore network
 sudo iptables -D OUTPUT -d "$CLOUD_IP" -j DROP

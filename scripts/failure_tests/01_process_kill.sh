@@ -17,7 +17,7 @@ echo "--- pipeline status BEFORE kill ---" | tee -a "$EVIDENCE_DIR/run.log"
 pipeline status | tee "$EVIDENCE_DIR/status_before.json"
 
 # Find and kill the pipeline process
-PID=$(pgrep -f "pipeline run" | head -1 || true)
+PID=$(pgrep -f "bin/pipeline" | head -1 || true)
 if [ -z "$PID" ]; then
   echo "ERROR: pipeline run process not found" | tee -a "$EVIDENCE_DIR/run.log"
   exit 1
@@ -29,7 +29,7 @@ sleep 2
 
 # Restart
 echo "Restarting pipeline..." | tee -a "$EVIDENCE_DIR/run.log"
-pipeline run &
+pipeline --config config/pipeline.toml run &
 NEW_PID=$!
 echo "New PID: $NEW_PID" | tee -a "$EVIDENCE_DIR/run.log"
 sleep 5

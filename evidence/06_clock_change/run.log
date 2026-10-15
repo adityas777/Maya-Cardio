@@ -1,0 +1,6 @@
+=== Test 06: Clock Change ===
+Tue Oct 13 21:53:30 UTC 2026
+Jumping clock forward 1 hour...
+Samples: before=300800 during=480000 after=480000
+PASS: samples accumulating despite clock change
+=== DONE ===

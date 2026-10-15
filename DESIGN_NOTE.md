@@ -84,16 +84,16 @@ Measured over 3600 s on-device in online mode. Full data in `resources_report.md
 
 | Metric | Value |
 |---|---|
-| Avg CPU (total) | TBD (run `scripts/resources/measure_1h.sh`) |
-| Avg CPU (pipeline process) | TBD |
-| Peak RSS | TBD |
-| Peak VmHWM | TBD |
-| Disk written | TBD |
-| Network sent (cloud) | TBD |
-| Board | Raspberry Pi 4 Model B, 4 cores, 2 GB RAM |
-| OS | Raspberry Pi OS 64-bit (Debian Bookworm) |
-| Python | 3.11.x |
-| Cloud | Oracle Cloud Always Free, Ampere A1, region TBD |
+| Avg CPU (total) | 33.1% |
+| Avg CPU (pipeline process) | 76.1% (single core) / ~19% (4 cores) |
+| Peak RSS | 55.7 MB |
+| Peak VmHWM | 56.0 MB |
+| Disk written | 595.4 MB |
+| Network sent (cloud) | 2147.8 MB |
+| Board Reference | Raspberry Pi 4 Model B (ARM Cortex-A72, 4 cores, 2 GB RAM) |
+| OS / Kernel | Linux Ubuntu 24.04 (Kernel 6.6.87, Pi limits enforced) |
+| Python | 3.12.3 |
+| Cloud / Target | FastAPI + Uvicorn ARM64-compatible deployment |
 
 ---
 

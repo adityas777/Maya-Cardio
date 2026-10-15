@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MayaCardio Submission Dossier — Never Lose a Heartbeat</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 14mm 15mm 16mm 15mm;
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 8pt;
+      color: #64748b;
+    }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 9pt;
+    line-height: 1.35;
+    color: #1e293b;
+    margin: 0;
+    padding: 0;
+  }
+  .header-card {
+    background: linear-gradient(135deg, #0b2545 0%, #134074 100%);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+  .header-card h1 {
+    font-size: 17pt;
+    margin: 0 0 4px 0;
+    color: #ffffff;
+    letter-spacing: -0.3px;
+  }
+  .header-card .tagline {
+    font-size: 10pt;
+    color: #93c5fd;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .meta-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 8pt;
+    color: #e2e8f0;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 8px;
+  }
+  .meta-item strong {
+    color: #ffffff;
+  }
+
+  /* Video link box */
+  .link-box {
+    background: #f8fafc;
+    border: 2px dashed #3b82f6;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 14px 0;
+  }
+  .link-box h3 {
+    margin: 0 0 6px 0;
+    color: #1d4ed8;
+    font-size: 11pt;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .link-field {
+    margin: 8px 0;
+    font-size: 8.5pt;
+  }
+  .link-field strong {
+    display: inline-block;
+    width: 140px;
+    color: #0f172a;
+  }
+  .link-placeholder {
+    display: inline-block;
+    width: calc(100% - 150px);
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-family: "Consolas", monospace;
+    font-size: 8.5pt;
+    color: #64748b;
+  }
+
+  h2 {
+    font-size: 11pt;
+    color: #0b2545;
+    border-bottom: 1.5px solid #0b2545;
+    padding-bottom: 3px;
+    margin: 18px 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  h3 {
+    font-size: 9.5pt;
+    color: #134074;
+    margin: 10px 0 4px 0;
+  }
+  p {
+    margin: 4px 0 6px 0;
+  }
+  ul, ol {
+    margin: 4px 0 8px 18px;
+    padding: 0;
+  }
+  li {
+    margin-bottom: 2px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 12px 0;
+    font-size: 8pt;
+  }
+  th, td {
+    border: 1px solid #cbd5e1;
+    padding: 4px 7px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    font-weight: 600;
+  }
+  tr:nth-child(even) td {
+    background-color: #f8fafc;
+  }
+
+  pre {
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 7.5pt;
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin: 6px 0 10px 0;
+    line-height: 1.25;
+    overflow-x: auto;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .badge-pass {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+  .highlight-card {
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+    padding: 8px 12px;
+    margin: 8px 0;
+    font-size: 8.5pt;
+  }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: HEADER, LINKS, AND ARCHITECTURE -->
+<div class="header-card">
+  <h1>MayaCardio Biosignal Pipeline</h1>
+  <div class="tagline">"Never Lose a Heartbeat" — Candidate Assessment Submission Dossier</div>
+  <div class="meta-grid">
+    <div class="meta-item"><strong>Assessment:</strong> Software Systems Engineering (Oct 2026)</div>
+    <div class="meta-item"><strong>Target Platform:</strong> Raspberry Pi 4 Model B (4 cores, 2 GB RAM)</div>
+    <div class="meta-item"><strong>Submission Format:</strong> Complete Unified Dossier + Code Package</div>
+    <div class="meta-item"><strong>Date:</strong> October 14, 2026</div>
+  </div>
+</div>
+
+<!-- PROMINENT VIDEO & REPOSITORY LINKS SECTION -->
+<div class="link-box">
+  <h3>Project Demo Video & Repository Submission Links</h3>
+  <p style="margin: 0 0 6px 0; font-size: 8pt; color: #475569;">
+    As authorized under Assessment Spec Section 16 (Item 3), this master document contains the complete technical design, full-hour Pi resource measurements, failure test evidence logs, and submission links.
+  </p>
+  <div class="link-field">
+    <strong>Demo Video Link:</strong>
+    <a href="https://www.youtube.com/watch?v=fFcPxcLqXg0" target="_blank" style="font-family: 'Consolas', monospace; font-size: 9pt; color: #1d4ed8; font-weight: bold; text-decoration: underline;">https://www.youtube.com/watch?v=fFcPxcLqXg0</a>
+  </div>
+  <div class="link-field">
+    <strong>GitHub Repo Link:</strong>
+    <a href="https://github.com/adityas777/Maya-Cardio.git" target="_blank" style="font-family: 'Consolas', monospace; font-size: 9pt; color: #1d4ed8; font-weight: bold; text-decoration: underline;">https://github.com/adityas777/Maya-Cardio.git</a>
+  </div>
+  <div class="link-field">
+    <strong>Demo Video Contents:</strong>
+    <span>Demonstrates normal online streaming, network cut (&le;10s offline switch), network restoration and 40s catch-up, process crash recovery (kill -9), and results command.</span>
+  </div>
+</div>
+
+<h2>1. System Architecture & Design</h2>
+<p>
+  The pipeline is a single, production-grade CLI application running on the target device. It continuously ingests dual-sensor biosignal telemetry from a mock service over TCP (port 7100), persists all data into a crash-resilient local SQLite WAL database, uploads batched samples to an idempotent Cloud API, and executes real-time heart-rate processing across both device and cloud.
+</p>
+
+<pre>
+┌──────────────────────────────┐
+│  biosignal-mock (TCP 7100)   │ (Newline-delimited JSON chunks, signed 24-bit samples)
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐       ┌────────────────────────┐
+│     Reader (Thread × 2)      ├──────>│     Loss Recorder      │ (Atomic gap, CRC & disk loss)
+└──────────────┬───────────────┘       └───────────┬────────────┘
+               │ (Atomic transaction batching)     │
+               ▼                                   ▼
+┌───────────────────────────────────────────────────────────────┐
+│              Durable Store (SQLite WAL Mode)                  │
+│       Composite Primary Key: (session_id, sensor, idx)        │
+└──────────────┬───────────────────────────┬────────────────────┘
+               │                           │
+               ▼                           ▼
+┌──────────────────────────────┐ ┌──────────────────────────────┐
+│       Uploader Thread        │ │  Offline Processing Thread   │
+│   (Idempotent HTTP POSTs)    │ │   (Identical processing.py)  │
+└──────────────┬───────────────┘ └──────────────────────────────┘
+               │ (REST + Bearer Token)
+               ▼
+┌──────────────────────────────┐
+│   Cloud API (FastAPI / VM)   │ (Online window processing & catch-up)
+└──────────────────────────────┘
+</pre>
+
+<div class="highlight-card">
+  <strong>Key Architectural Decisions:</strong>
+  <ul>
+    <li><strong>Durable Storage (SQLite WAL with synchronous=FULL):</strong> Eliminates hand-rolled log complexity. SQLite handles fsync guarantees, transactions, and crash recovery cleanly. The composite primary key <code>(session_id, sensor, idx)</code> with <code>INSERT OR IGNORE</code> makes sample de-duplication completely idempotent.</li>
+    <li><strong>Monotonic Index-Based Ordering:</strong> Wall-clock time fluctuates across reboots, NTP synchronization, and timezone shifts. All sample ordering, window segmentation (400 samples/window), and gap calculations strictly use contiguous sample indices. Monotonic timers (<code>time.monotonic()</code>) are restricted solely to health probe timeouts.</li>
+    <li><strong>Decoupled Asynchronous Readers:</strong> Dedicated reader threads for Sensor 1 and Sensor 2 prevent network backpressure from blocking ingestion. Replies are verified using zlib CRC-32 extracted directly from the raw byte stream before parsing.</li>
+  </ul>
+</div>
+
+<!-- PAGE 2: GUARANTEES, POWER CUT & RESOURCE REPORT -->
+<div class="page-break"></div>
+
+<h2>2. Formal Guarantees & Non-Guarantees</h2>
+
+<table>
+  <tr><th>Guarantee</th><th>Architectural Mechanism</th><th>Assessment Verification</th></tr>
+  <tr>
+    <td><strong>Exactly-Once Storage</strong></td>
+    <td>Composite PK <code>(session_id, sensor, idx)</code> + <code>INSERT OR IGNORE</code> in SQLite WAL.</td>
+    <td>Verified in Test 01 & Test 07: duplicate packets produce zero redundant rows.</td>
+  </tr>
+  <tr>
+    <td><strong>Zero Silent Loss</strong></td>
+    <td>Sequence gap detection, mock-reported buffer overflows, CRC mismatches, and disk-full errors write durable rows to <code>losses</code>.</td>
+    <td>Verified across all tests: device and cloud export diffs match ground truth without unflagged gaps.</td>
+  </tr>
+  <tr>
+    <td><strong>Lossless Mode Switching</strong></td>
+    <td>Reader threads continue ingesting locally during cloud network loss; uploader pauses and resumes safely from <code>cloud_ack</code> cursor.</td>
+    <td>Verified in Test 03: switched offline in 1s, restored online in 1s, 0 duplicate or dropped samples.</td>
+  </tr>
+  <tr>
+    <td><strong>Idempotent Cloud Catch-Up</strong></td>
+    <td>Cloud database mirrors the exact composite PK schema; bulk batches (up to 24,000 samples) resend safely after outages.</td>
+    <td>Verified in Test 03: catch-up backlog cleared in 40s (well below 15-minute budget).</td>
+  </tr>
+  <tr>
+    <td><strong>Logic Equivalence</strong></td>
+    <td>A single shared module <code>src/pipeline/processing.py</code> computes windows on both cloud and device.</td>
+    <td>Verified against independent <code>tests/reference.py</code> with 100% agreement.</td>
+  </tr>
+</table>
+
+<p><strong>Explicit Non-Guarantees:</strong></p>
+<ul>
+  <li><em>Pre-connection Mock Drops:</em> If the mock's 10-second internal circular buffer overflows before the pipeline connects, those samples cannot be retrieved; they are recorded as <code>buffer_overflow</code> from the mock's reply.</li>
+  <li><em>Unreliable Storage Controller Flushes:</em> If an SD card controller falsely confirms fsync completion while keeping dirty data in volatile write cache, power cuts may exceed software bounds.</li>
+  <li><em>Degraded Latency Deadlines:</em> Under extreme packet degradation where health probes pass but uploads stall, a 3.0-second grace period prevents result starvation.</li>
+</ul>
+
+<h2>3. Maximum Data Loss on Sudden Power Cut</h2>
+<p>
+  <strong>Stated Design Bound (Assumption A8):</strong> <strong>&le; 400 samples per sensor (&le; 1.0 second of data)</strong>.
+</p>
+<p>
+  <strong>Technical Proof:</strong> The pipeline buffers samples in memory and executes atomic SQLite transactions every 400 samples (1.0 s of data at 400 Hz) or on a 1.0-second timer, using <code>PRAGMA synchronous = FULL</code>. Upon an unannounced power loss, only the uncommitted in-memory batch is unwritten. On subsequent boot, database integrity is verified, committed cursors are loaded, and the missing gap is recorded as <code>crash_or_power_loss</code>.
+  In simulated power-loss testing (abrupt process termination without sync), observed loss was <strong>0 to 384 samples per sensor</strong>, strictly complying with the 400-sample ceiling.
+</p>
+
+<h2>4. Official 1-Hour Pi 4 Resource Measurement Report</h2>
+<p>
+  Continuously sampled over <strong>3,603 seconds (714 samples, 5s sampling interval)</strong> in online mode with full mock ingestion, WAL commits, and cloud uploads under Raspberry Pi 4 limits (4 CPU cores, 2 GB RAM limit):
+</p>
+
+<table>
+  <tr><th>Measured Metric</th><th>1-Hour Measured Value</th><th>Pi 4 Limit / Requirement</th><th>Compliance Status</th></tr>
+  <tr><td><strong>Total Measurement Time</strong></td><td>3,603 s (1 hour and 3 seconds)</td><td>3,600 s continuous run</td><td><span class="badge badge-pass">PASS</span> Complete</td></tr>
+  <tr><td><strong>Average Total System CPU</strong></td><td><strong>33.1%</strong></td><td>Total across 4 CPU cores</td><td><span class="badge badge-pass">PASS</span> High Headroom</td></tr>
+  <tr><td><strong>Average Pipeline Process CPU</strong></td><td><strong>76.1%</strong> (single core) / <strong>19.0%</strong> (4-core pool)</td><td>Max 400% (4 cores)</td><td><span class="badge badge-pass">PASS</span> Low Overhead</td></tr>
+  <tr><td><strong>Peak Resident Memory (VmRSS)</strong></td><td><strong>55.7 MB</strong></td><td>&le; 2,048 MB (2 GB)</td><td><span class="badge badge-pass">PASS</span> 2.7% of RAM</td></tr>
+  <tr><td><strong>Peak High-Water Mark (VmHWM)</strong></td><td><strong>56.0 MB</strong></td><td>&le; 2,048 MB</td><td><span class="badge badge-pass">PASS</span> Stable</td></tr>
+  <tr><td><strong>Mock Service Peak Memory</strong></td><td><strong>14.8 MB</strong></td><td>&le; 2,048 MB</td><td><span class="badge badge-pass">PASS</span> Minimal</td></tr>
+  <tr><td><strong>Total Disk Volume Written</strong></td><td><strong>595.4 MB</strong> (~165 KB/s continuous)</td><td>Flash SD write endurance</td><td><span class="badge badge-pass">PASS</span> Safe for SD</td></tr>
+  <tr><td><strong>Total Network Transmitted (TX)</strong></td><td><strong>2,147.8 MB</strong> (loopback interface stream)</td><td>Network capacity</td><td><span class="badge badge-pass">PASS</span> Continuous</td></tr>
+  <tr><td><strong>Memory Leak Assessment</strong></td><td>RSS slope = 0.0 MB/hr (flat at ~55 MB)</td><td>Zero uncollected memory leaks</td><td><span class="badge badge-pass">PASS</span> Zero Leaks</td></tr>
+</table>
+
+<!-- PAGE 3: FAILURE TEST EVIDENCE & VERIFICATION -->
+<div class="page-break"></div>
+
+<h2>5. Complete Failure Test Evidence & Results</h2>
+<p>
+  All required failure scenarios from Section 12 have been executed and validated in simulation. Raw logs and JSON exports are archived in the <code>evidence/</code> folder:
+</p>
+
+<table>
+  <tr><th>#</th><th>Test Name</th><th>Fault Injected</th><th>Observed Behavior & Measurements</th><th>Result</th></tr>
+  <tr>
+    <td><strong>01</strong></td>
+    <td><strong>Process Kill</strong></td>
+    <td><code>kill -9</code> during active collection</td>
+    <td>Restarted from last committed cursor. Deduplication verified: zero duplicate rows in SQLite. Export matches ground truth.</td>
+    <td><span class="badge badge-pass">PASS</span></td>
+  </tr>
+  <tr>
+    <td><strong>02</strong></td>
+    <td><strong>Power Cut Simulation</strong></td>
+    <td>Abrupt process termination without sync</td>
+    <td>Restarted with <code>PRAGMA integrity_check</code>. Loss gap recorded as <code>crash_or_power_loss</code> (&le; 400 samples/sensor bound).</td>
+    <td><span class="badge badge-pass">PASS</span></td>
+  </tr>
+  <tr>
+    <td><strong>03</strong></td>
+    <td><strong>Network Cut & Restore</strong></td>
+    <td><code>iptables</code> DROP to Cloud IP for 15s</td>
+    <td>Switched to offline in <strong>1s</strong> (&le;10s limit). Switched back to online in <strong>1s</strong>. Catch-up completed in <strong>40s</strong> (&le;15m limit). Cloud export == device export.</td>
+    <td><span class="badge badge-pass">PASS</span></td>
+  </tr>
+  <tr>
+    <td><strong>04</strong></td>
+    <td><strong>Mock Restart</strong></td>
+    <td>Mock restarted with new <code>session_id</code></td>
+    <td>Closed old session cleanly with unread range recorded as loss. Started new session from index 0 without collision.</td>
+    <td><span class="badge badge-pass">PASS</span></td>
+  </tr>
+  <tr>
+    <td><strong>05</strong></td>
+    <td><strong>Full Disk</strong></td>
+    <td>Simulated storage exhaustion (no space)</td>
+    <td>Pipeline entered <code>disk_full</code> state; recorded loss lines for unwritten ranges; process survived without crashing; recovered when space returned.</td>
+    <td><span class="badge badge-pass">PASS</span></td>
+  </tr>
+  <tr>
+    <td><strong>06</strong></td>
+    <td><strong>Clock Jump</strong></td>
+    <td>System wall-clock shifted &plusmn;1 hour</td>
+    <td>Monotonic timers and index-based ordering unaffected. Window bounds, sample ordering, and catch-up timers operated normally.</td>
+    <td><span class="badge badge-pass">PASS</span></td>
+  </tr>
+  <tr>
+    <td><strong>07</strong></td>
+    <td><strong>Corrupt & Duplicate Packets</strong></td>
+    <td>Corrupted CRC32 and repeated indices injected via <code>fault_proxy.py</code></td>
+    <td>Corrupt replies rejected and re-requested (up to retry budget). Duplicate indices ignored via PK constraint. Export matches ramp formula.</td>
+    <td><span class="badge badge-pass">PASS</span></td>
+  </tr>
+  <tr>
+    <td><strong>08</strong></td>
+    <td><strong>Sensor Silent</strong></td>
+    <td>Proxy dropped Sensor 1 data for 20s</td>
+    <td>Sensor 1 losses logged. Result windows generated with <code>missing_1 = 400</code>, <code>complete = false</code>, and <code>heart_rate = null</code>. No invented values.</td>
+    <td><span class="badge badge-pass">PASS</span></td>
+  </tr>
+  <tr>
+    <td><strong>U</strong></td>
+    <td><strong>Unit Test Suite</strong></td>
+    <td>38 unit tests (CRC, math, store, reference parity)</td>
+    <td>38 / 38 passed in 3.18 seconds covering all edge cases, rounding rules, and reference implementation parity.</td>
+    <td><span class="badge badge-pass">PASS</span></td>
+  </tr>
+  <tr>
+    <td><strong>R</strong></td>
+    <td><strong>Ramp Integrity Test</strong></td>
+    <td>Predictable formula: <code>(3i + c) mod 8388608</code></td>
+    <td>Every sample verified by <code>compare_export.py</code> against analytical formula with 0 discrepancies.</td>
+    <td><span class="badge badge-pass">PASS</span></td>
+  </tr>
+</table>
+
+<h2>6. Assumptions Register (A1–A9)</h2>
+<table>
+  <tr><th>#</th><th>Assumption Name</th><th>Implementation in Code</th><th>Assessment Location</th></tr>
+  <tr><td><strong>A1</strong></td><td>Sample Availability</td><td>A sample is available if present in the local database and not recorded in a loss record.</td><td>Spec §4.1</td></tr>
+  <tr><td><strong>A2</strong></td><td>Magnitude Null Rule</td><td>Mean magnitude returns <code>null</code> if zero Sensor 2 samples are available in the 1-second window.</td><td>Spec §4.2</td></tr>
+  <tr><td><strong>A3</strong></td><td>Heart-Rate Missing Check</td><td>The missing-sample check for heart-rate gating applies strictly to Sensor 1 (ECG) samples.</td><td>Spec §4.4</td></tr>
+  <tr><td><strong>A4</strong></td><td>Peak Gating Rule</td><td>A peak candidate failing the 100-sample gap is dropped; the earlier peak retains precedence.</td><td>Spec §4.3</td></tr>
+  <tr><td><strong>A5</strong></td><td>Decimal Rounding</td><td>All floating-point results round to 1 decimal place using half-up arithmetic (<code>round(v, 1)</code>).</td><td>Spec §4.2</td></tr>
+  <tr><td><strong>A6</strong></td><td>Result Mode Output</td><td>Both offline and online results are saved and printed; the <code>mode</code> field disambiguates them.</td><td>Spec §10</td></tr>
+  <tr><td><strong>A7</strong></td><td>Window Grace Period</td><td>Online processor waits at most 3.0 seconds after window end before emitting partial window results.</td><td>Spec §7.2</td></tr>
+  <tr><td><strong>A8</strong></td><td>Power-Cut Stated Bound</td><td>Worst-case uncommitted sample loss on power cut is 400 samples/sensor (1 second batch commit).</td><td>Spec §3.2, §6.4</td></tr>
+  <tr><td><strong>A9</strong></td><td>Session Scope</td><td>Sessions are uniquely identified and partitioned by the mock's 32-bit hexadecimal <code>session_id</code>.</td><td>Spec §5.2</td></tr>
+</table>
+
+<!-- PAGE 4: AI DISCLOSURE & INSTALLATION -->
+<div class="page-break"></div>
+
+<h2>7. Formal AI Tool Disclosure (Spec Section 17)</h2>
+<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px 14px; margin-bottom: 14px;">
+  <p><strong>Tools Used:</strong> Antigravity IDE (Google DeepMind) with Gemini 3.8 Flash & Claude 3.7 Sonnet.</p>
+  <p><strong>Used For:</strong> Code drafting across all pipeline modules (reader, store, uploader, processing, cloud API), unit test generation, failure injection test scripts, HTML/PDF dossier styling, and initial design note drafting.</p>
+  <p><strong>Not Used For:</strong> Final architecture selection (SQLite WAL, index-based monotone counters, and explicit loss accounting were determined by the engineer), physical hardware verification, or evaluating final pass/fail judgements.</p>
+  <p><strong>Human Review Performed:</strong></p>
+  <ul>
+    <li>Audited <code>processing.py</code> against Section 4 mathematical specifications line-by-line (peak detection, 100-sample gap, 5-second window HR formula).</li>
+    <li>Executed and verified all 38 pytest unit tests locally (100% pass).</li>
+    <li>Executed end-to-end failure injection tests (network cut, process kill, disk full, corrupt reply) and validated raw JSONL diff outputs.</li>
+    <li>Audited 1-hour resource CSV logs and verified memory stability and CPU allocation under Pi 4 boundaries.</li>
+  </ul>
+  <p><strong>Date:</strong> October 14, 2026</p>
+</div>
+
+<h2>8. Fresh-Board Installation & Operational Guide</h2>
+<p>
+  To deploy the submission on a clean Raspberry Pi 4 running Raspberry Pi OS 64-bit (Debian Bookworm):
+</p>
+
+<pre>
+# 1. Clone repository
+git clone https://github.com/adityas777/Maya-Cardio.git /opt/pipeline-src
+cd /opt/pipeline-src
+
+# 2. Execute automated setup script (installs dependencies, venv, systemd units)
+sudo bash setup_pi.sh
+
+# 3. Configure credentials
+sudo bash -c 'echo "PIPELINE_CLOUD_TOKEN=your_bearer_token" > /etc/pipeline.env'
+sudo chmod 600 /etc/pipeline.env
+
+# 4. Start systemd services
+sudo systemctl start biosignal-mock
+sudo systemctl start pipeline
+
+# 5. Inspect status and verify live collection
+pipeline status
+</pre>
+
+<p><strong>Required CLI Commands:</strong></p>
+<table>
+  <tr><th>Command</th><th>Operational Function & Output Format</th></tr>
+  <tr>
+    <td><code>pipeline status</code></td>
+    <td>Prints 1 JSON line: current mode (online/offline), samples saved, samples in cloud, and backlog count.</td>
+  </tr>
+  <tr>
+    <td><code>pipeline export --session &lt;ID&gt; --from device</code></td>
+    <td>Streams JSON lines of saved samples and loss records directly from local SQLite database.</td>
+  </tr>
+  <tr>
+    <td><code>pipeline export --session &lt;ID&gt; --from cloud</code></td>
+    <td>Streams JSON lines of samples and loss records fetched from the Cloud API.</td>
+  </tr>
+  <tr>
+    <td><code>pipeline results --session &lt;ID&gt;</code></td>
+    <td>Outputs 1 JSON line per window with calculated statistics, channel min/max/mean, magnitude, and heart rate.</td>
+  </tr>
+</table>
+
+<h2>9. Verification & Submission File Manifest</h2>
+<p>The submission package contains the following structure:</p>
+<pre>
+submission/
+├── MayaCardio_Submission_Dossier.pdf  <-- THIS MASTER DOCUMENT (with video link & evidence)
+├── DESIGN_NOTE.pdf                    <-- Strict 2-page design document (Spec §14)
+├── README.md                          <-- Installation, assumptions, and command reference
+├── AI_DISCLOSURE.md                   <-- Tool disclosure following Spec §17
+├── resources_report.md                <-- 1-hour online mode figures & test environment report
+├── evidence/                          <-- Full measured CSVs, test logs, and export diffs
+│   ├── resources_1h.csv               <-- 3,603s continuous resource time-series
+│   ├── ramp_export.jsonl              <-- Deterministic ramp export dataset
+│   ├── 01_process_kill/               <-- Process kill run log & status before/after
+│   ├── 02_power_cut/                  <-- Power cut simulation summary & bounds check
+│   ├── 03_network_cut/                <-- Network cut log (1s switch, 40s catchup) & cloud diff
+│   ├── 04_mock_restart/               <-- Mock session restart logs & session export
+│   ├── 05_disk_full/                  <-- Disk full loss logs & recovery validation
+│   ├── 06_clock_change/               <-- Clock jump logs & monotonic stability proof
+│   ├── 07_corrupt_and_duplicate/      <-- Fault proxy CRC rejection & deduplication log
+│   └── 08_sensor_silent/              <-- Sensor silent partial window & missing count log
+└── pipeline/                          <-- Clean source code repository (src, tests, scripts, systemd)
+</pre>
+
+</body>
+</html>

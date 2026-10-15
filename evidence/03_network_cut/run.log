@@ -1,0 +1,18 @@
+=== Test 03: Network Cut ===
+Date: Wed Oct 14 06:52:29 UTC 2026
+Session: 8b529b4a  Cloud IP: 172.18.247.245
+Network cut at mono=80.26030474 wall=Wed Oct 14 06:52:30 UTC 2026
+  t=1s mode=offline
+OFFLINE in 1s
+Keeping network down for 15s...
+Network restored at Wed Oct 14 06:52:47 UTC 2026
+  t=1s mode=online
+ONLINE in 1s
+Waiting for catch-up (max 15 min)...
+  t=10s backlog=168000
+  t=20s backlog=96000
+  t=30s backlog=24000
+  t=40s backlog=0
+CATCH-UP COMPLETE in 40s
+PASS: device==cloud export
+=== DONE ===

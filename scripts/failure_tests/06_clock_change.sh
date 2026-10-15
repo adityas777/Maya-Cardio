@@ -16,7 +16,7 @@ SAMPLES_BEFORE=$(pipeline status | python3 -c "import sys,json;print(json.load(s
 echo "Jumping clock forward 1 hour..." | tee -a "$EVIDENCE_DIR/run.log"
 # Temporarily disable NTP to allow the jump
 timedatectl set-ntp false 2>/dev/null || true
-date --set="$(date -d '+1 hour' '+%Y-%m-%d %H:%M:%S')"
+sudo date --set="$(date -d '+1 hour' '+%Y-%m-%d %H:%M:%S')"
 
 sleep 10
 
@@ -24,7 +24,7 @@ pipeline status | tee "$EVIDENCE_DIR/status_during.json"
 SAMPLES_DURING=$(pipeline status | python3 -c "import sys,json;print(json.load(sys.stdin)['samples_saved'])")
 
 # Restore clock
-date --set="$(date -d '-1 hour' '+%Y-%m-%d %H:%M:%S')"
+sudo date --set="$(date -d '-1 hour' '+%Y-%m-%d %H:%M:%S')"
 timedatectl set-ntp true 2>/dev/null || true
 
 sleep 5

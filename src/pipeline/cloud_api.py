@@ -52,7 +52,15 @@ def _require_auth(creds: HTTPAuthorizationCredentials = Depends(_security)):
 # Store (cloud-side)
 # ---------------------------------------------------------------------------
 
-_DB_PATH = os.environ.get("CLOUD_DB_PATH", "/data/cloud.db")
+def _resolve_default_cloud_db() -> str:
+    env_path = os.environ.get("CLOUD_DB_PATH")
+    if env_path:
+        return env_path
+    if os.path.isdir("/data") and os.access("/data", os.W_OK):
+        return "/data/cloud.db"
+    return "data/cloud.db"
+
+_DB_PATH = _resolve_default_cloud_db()
 _GRACE_S = float(os.environ.get("GRACE_PERIOD_S", "3"))
 
 _store: Optional[Store] = None
@@ -215,11 +223,12 @@ async def post_samples(
         daemon=True,
     ).start()
 
-    # Return highest contiguous index for this sensor
-    all_samples = store.get_samples(session_id, sensor, 0, new_next)
-    # Find highest contiguous index from index 0
-    expected = 0
-    for idx, _ in all_samples:
+    # Return highest contiguous index for this sensor starting from current cloud_ack
+    _, current_ack = store.get_cursor(session_id, sensor)
+    scan_limit = min(new_next, current_ack + max(len(samples), 400) + 1000)
+    recent_samples = store.get_samples(session_id, sensor, current_ack, scan_limit)
+    expected = current_ack
+    for idx, _ in recent_samples:
         if idx == expected:
             expected += 1
         else:

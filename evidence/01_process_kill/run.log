@@ -1,0 +1,11 @@
+=== Test 01: Process Kill ===
+Date: Tue Oct 13 21:48:57 UTC 2026
+Session: a3b1799d
+--- pipeline status BEFORE kill ---
+Killing PID 18297 with SIGKILL at Tue Oct 13 21:48:58 UTC 2026
+Restarting pipeline...
+New PID: 18332
+--- pipeline status AFTER restart ---
+--- Export and compare ---
+PASS: no duplicates
+RESULT: see compare_result.txt and run.log

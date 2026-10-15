@@ -4,7 +4,7 @@
 
 set -euo pipefail
 SESSION_ID="${1:-}"
-EVIDENCE_DIR="evidence/07_corrupt_duplicate"
+EVIDENCE_DIR="evidence/07_corrupt_and_duplicate"
 mkdir -p "$EVIDENCE_DIR"
 PROXY_PORT=7200
 

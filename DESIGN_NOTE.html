@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Design Note: MayaCardio Biosignal Pipeline</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 8.5pt;
+    line-height: 1.25;
+    color: #111;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    font-size: 13pt;
+    margin: 0 0 2px 0;
+    color: #0b2545;
+    border-bottom: 1.5pt solid #0b2545;
+    padding-bottom: 2px;
+  }
+  .subtitle {
+    font-size: 8pt;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 6px;
+  }
+  h2 {
+    font-size: 9.5pt;
+    margin: 6px 0 2px 0;
+    color: #134074;
+    border-bottom: 0.5pt solid #ccc;
+    padding-bottom: 1px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  p {
+    margin: 2px 0;
+  }
+  ul, ol {
+    margin: 2px 0 3px 14px;
+    padding: 0;
+  }
+  li {
+    margin-bottom: 1px;
+  }
+  pre {
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 7pt;
+    background: #f4f6f8;
+    padding: 4px;
+    margin: 3px 0;
+    border-left: 2pt solid #134074;
+    line-height: 1.15;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 3px 0;
+    font-size: 7.5pt;
+  }
+  th, td {
+    border: 0.5pt solid #bbb;
+    padding: 2px 4px;
+    text-align: left;
+  }
+  th {
+    background-color: #eef2f7;
+    color: #111;
+    font-weight: 600;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+  .highlight {
+    font-weight: bold;
+    color: #0b2545;
+  }
+  .two-col {
+    display: flex;
+    gap: 8px;
+  }
+  .two-col > div {
+    flex: 1;
+  }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 -->
+<h1>Design Note: MayaCardio Biosignal Pipeline</h1>
+<div class="subtitle">"Never Lose a Heartbeat" · Software Systems Engineering Assessment · October 2026</div>
+
+<h2>1. Architecture</h2>
+<p>The on-device pipeline is structured into decoupled, single-responsibility components operating over local inter-thread queues and an ACID SQLite backing store:</p>
+<pre>
+biosignal-mock (TCP 7100) ──> [Reader × 2] ──> [Loss Recorder] ──> [Durable Store: SQLite WAL] ──> [Offline Processor]
+                                                     │                   │                                 │
+                                                     └───────────────────┼──> [Uploader] ──HTTPS──> Cloud API
+                                                                         └──> [Mode Controller] (Health Probes)
+</pre>
+<p><strong>Durable Store (SQLite WAL + synchronous=FULL):</strong> SQLite in Write-Ahead Logging mode provides true ACID crash-safety and process-crash resilience. A composite primary key <code>(session_id, sensor, idx)</code> guarantees that sample re-reads from the mock or re-submissions from network interruptions are idempotent via <code>INSERT OR IGNORE</code>. Queries for export, window boundaries, and catch-up ack cursors are executed as standard B-tree queries with zero custom serialization overhead.</p>
+<p><strong>Monotonic Index-Based Ordering:</strong> Wall clocks fluctuate due to NTP corrections, daylight savings, or power cuts. In accordance with §5.3, all sample ordering, gap detection, and 400-sample window segmentations rely solely on integer sample indices. Monotonic timers (<code>time.monotonic()</code>) are restricted strictly to relative timeouts (reconnection backoffs, health-probe intervals).</p>
+<p><strong>Component Workflow:</strong></p>
+<ul>
+  <li><strong>Readers (1 per sensor):</strong> Stream newline-delimited JSON chunks from TCP 7100. Extract data substring directly to verify zlib CRC-32 against the reply header. Detect gaps (<code>first_index > expected_next</code>) and log loss records immediately.</li>
+  <li><strong>Commit Policy:</strong> Batches of up to 400 samples (1 s) per sensor are committed atomically with cursor checkpoints inside single SQLite transactions.</li>
+  <li><strong>Mode Controller:</strong> Probes Cloud <code>/v1/health</code> every 2 s. Switches to <code>offline</code> after 2 consecutive failures (&le;4 s, well within 10 s limit); returns to <code>online</code> after 2 consecutive successes and uploader handshake.</li>
+  <li><strong>Uploader & Catch-up:</strong> In online mode, POSTs 1-second sample batches to <code>/v1/samples</code>. Advances <code>cloud_ack</code> only upon HTTP 200. On network restoration, switches to 60-second bulk catch-up batches until backlog reaches zero.</li>
+  <li><strong>Processing Engine:</strong> Shared <code>processing.py</code> module calculates 1-second window stats, peak candidate gating (100-sample gap), and heart rate (60 &times; 400 / mean peak gap) identically on cloud and device.</li>
+</ul>
+
+<h2>2. What is Guaranteed</h2>
+<table>
+  <tr><th>Guarantee</th><th>Underlying Architectural Mechanism</th></tr>
+  <tr><td><strong>Zero Silent Loss</strong></td><td>Every missing sample is caught via gap detection, mock-reported loss, CRC failure, or disk-full handler, and durably written to <code>losses</code>.</td></tr>
+  <tr><td><strong>Exactly-Once Storage</strong></td><td>Unique constraint on <code>(session_id, sensor, idx)</code> with <code>INSERT OR IGNORE</code> discards duplicate arrivals cleanly.</td></tr>
+  <tr><td><strong>No Switch Loss / Dup</strong></td><td>Readers collect uninterrupted during network mode changes; uploaders resume safely from <code>cloud_ack</code>.</td></tr>
+  <tr><td><strong>Idempotent Cloud Ingestion</strong></td><td>Cloud API shares the identical composite primary key schema; resending unacknowledged batches cannot create duplicates.</td></tr>
+  <tr><td><strong>Processing Equivalence</strong></td><td>Device offline processor and Cloud API import the exact same pure-Python <code>processing.py</code> and pass reference parity checks.</td></tr>
+</table>
+
+<h2>3. What is NOT Guaranteed</h2>
+<ul>
+  <li><strong>Pre-read Mock Drops:</strong> Samples dropped by the mock's internal 10-second ring buffer before pipeline connection are unrecoverable; these are logged as <code>buffer_overflow</code> based on mock replies.</li>
+  <li><strong>Lying SD Card Hardware:</strong> If an underlying SD card / disk controller acknowledges flush/fsync without physical commit, sudden power pull during dirty block writes may cause data loss beyond stated bounds.</li>
+  <li><strong>Unbounded Cloud Availability:</strong> Free-tier cloud instances lack strict enterprise SLAs; device gracefully falls back to offline storage and processing during prolonged cloud downtime.</li>
+  <li><strong>Online Deadline during Packet Degradation:</strong> If the network maintains high latency without dropping packets, health probes may pass while transfers lag; a 3-second grace period prevents processing starvation.</li>
+</ul>
+
+<!-- PAGE 2 -->
+<div class="page-break"></div>
+
+<h2>4. Maximum Data Loss on Power Cut</h2>
+<p><strong>Stated Design Bound (Assumption A8):</strong> <span class="highlight">&le; 400 samples per sensor (&le; 1.0 second of data)</span>.</p>
+<p><strong>Technical Rationale:</strong> The pipeline accumulates samples in memory and commits to the durable SQLite WAL store every 400 samples (1 second of data) or on a 1.0-second timer, whichever occurs first, using <code>PRAGMA synchronous = FULL</code>. Upon an abrupt power severance, at most the uncommitted in-memory batch is unwritten. On reboot, integrity checks run, committed cursors load, and the reconnection gap is formally recorded as <code>crash_or_power_loss</code>.</p>
+<p><strong>Measured Value in Simulation:</strong> In simulated power cuts (immediate process termination without sync), uncommitted sample loss was measured at <span class="highlight">0 to 384 samples per sensor</span>, fully within the 400-sample guarantee.</p>
+
+<h2>5. Resource Figures Summary (1-Hour Online Run)</h2>
+<p>Measured over exactly 3,603 seconds (714 samples, 5s interval) under Pi 4 resource boundaries (4 CPU cores, 2 GB RAM ceiling) running continuous mock ingestion, WAL storage, and cloud upload.</p>
+<table>
+  <tr><th>Metric</th><th>Measured Value</th><th>Pi 4 Limit / Constraint</th><th>Status</th></tr>
+  <tr><td>Duration</td><td>3,603 s (1 hour)</td><td>3,600 s requirement</td><td>PASS</td></tr>
+  <tr><td>Average CPU % (Total System)</td><td>33.1%</td><td>Total across 4 cores</td><td>PASS</td></tr>
+  <tr><td>Average CPU % (Pipeline Process)</td><td>76.1% (single core) / ~19% (4-core pool)</td><td>Max 400% (4 cores)</td><td>PASS (plenty of headroom)</td></tr>
+  <tr><td>Peak Resident Memory (RSS)</td><td>55.7 MB</td><td>&le; 2,048 MB (2 GB)</td><td>PASS (2.7% of ceiling)</td></tr>
+  <tr><td>Peak High-Water Mark (VmHWM)</td><td>56.0 MB</td><td>&le; 2,048 MB</td><td>PASS</td></tr>
+  <tr><td>Mock Service Peak RSS</td><td>14.8 MB</td><td>&le; 2,048 MB</td><td>PASS</td></tr>
+  <tr><td>Total Disk Written</td><td>595.4 MB (~165 KB/s)</td><td>SD Card write endurance</td><td>PASS</td></tr>
+  <tr><td>Total Network Transmitted</td><td>2,147.8 MB (loopback stream)</td><td>Network link capacity</td><td>PASS</td></tr>
+  <tr><td>Test Environment</td><td colspan="3">Linux 6.6.87 (WSL2 Ubuntu 24.04), Python 3.12.3, SQLite 3.45.1, cgroup 2G/400% limits</td></tr>
+</table>
+
+<h2>6. Assumptions Register & Open Points</h2>
+<table>
+  <tr><th>#</th><th>Assumption</th><th>Operational Application</th></tr>
+  <tr><td>A1</td><td>Sample Availability</td><td>A sample is available if stored in the processing location's database and not indexed in a loss record.</td></tr>
+  <tr><td>A2</td><td>Magnitude Calculation</td><td>Mean magnitude of &radic;(ch1&sup2; + ch2&sup2;) returns <code>null</code> when zero sensor-2 samples exist in the window.</td></tr>
+  <tr><td>A3</td><td>Heart-Rate Missing Check</td><td>Missing-sample validation for heart-rate gating applies specifically to sensor-1 (ECG) data.</td></tr>
+  <tr><td>A4</td><td>Peak Collision Policy</td><td>A peak candidate failing the 100-sample gap is dropped; the earlier peak retains precedence.</td></tr>
+  <tr><td>A5</td><td>Decimal Rounding</td><td>All floating-point results round to 1 decimal place using half-up arithmetic consistently.</td></tr>
+  <tr><td>A6</td><td>Dual Mode Results</td><td>Both <code>offline</code> and <code>online</code> result lines are stored and outputted; the <code>mode</code> key disambiguates them.</td></tr>
+  <tr><td>A7</td><td>Window Grace Period</td><td>Online processor waits at most 3.0 s for missing window data before emitting a partial window.</td></tr>
+  <tr><td>A8</td><td>Power Cut Bound</td><td>Worst-case power-cut data loss bound is 400 samples/sensor (1 second batch commit interval).</td></tr>
+  <tr><td>A9</td><td>Session Unit</td><td>Export and processing sessions are scoped by the mock's 32-bit hexadecimal <code>session_id</code>.</td></tr>
+</table>
+<p><strong>Open Items (§16):</strong> (1) Mock binary download URL was blank in prompt — developed and verified against exact protocol test double (<code>fake_mock.py</code>). (2) Ground truth checker — validated against analytical ramp formula in <code>compare_export.py</code>. (3) AI tools disclosed in <code>AI_DISCLOSURE.md</code>.</p>
+
+</body>
+</html>
